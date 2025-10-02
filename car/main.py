@@ -46,7 +46,7 @@ def send_to_hud(client, eta_sec, total_lanes, current_lane, avoid_dir, ambulance
         eta_min, eta_s = divmod(int(eta_sec), 60)
         payload["eta"] = f"{eta_min}분 {eta_s}초"
 
-    client.publish("car/status", json.dumps(payload, ensure_ascii=False))
+    client.publish("car/hud", json.dumps(payload, ensure_ascii=False))
     print(f"📤 HUD에 전송 → {payload}")
 
 def on_connect(client, userdata, flags, rc):
