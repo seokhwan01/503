@@ -38,11 +38,6 @@ PIXEL_TO_DEG = CAMERA_FOV_DEG / W
 picam2 = Picamera2()
 cfg = picam2.create_video_configuration(main={"size": (W,H), "format":"RGB888"}, controls={"FrameRate": FPS})
 picam2.configure(cfg)
-# #### 노트북용 주석 처리
-# cap = cv2.VideoCapture(0)  # 0은 기본 내장 웹캠
-# cap.set(cv2.CAP_PROP_FRAME_WIDTH, W)
-# cap.set(cv2.CAP_PROP_FRAME_HEIGHT, H)
-# cap.set(cv2.CAP_PROP_FPS, FPS)
 
 
 last_lane = None        # 마지막 확정된 차선
@@ -103,22 +98,15 @@ def api_control():
 # --- 메인 루프 ---
 def processing_loop():
     global last_lane, candidate_lane, candidate_count  # 전역 변수 사용 선언
-    picam2.start(); time.sleep(0.2)
-    # ret, frame = cap.read()
+    picam2.start(); 
     time.sleep(0.2)
+
     
     try:
         while shared_data["running"]:
             frame = picam2.capture_array(); 
             h, w = frame.shape[:2]
             cx = w//2 
-            ###노트북 용
-            # ret, frame = cap.read()
-            # if not ret:
-            #     continue
-            # h, w = frame.shape[:2]
-            # cx = w // 2
-            # ##
 
             try:
                 result = detector.process_frame(frame)
@@ -194,7 +182,6 @@ def processing_loop():
                         print(f"✅ 차선 변경 확정 → {candidate_lane}")
                         last_lane = candidate_lane
 
-            # time.sleep(0.05)
     finally:  # <-- 반드시 finally로 자원 정리
         motor.stop()
         # cap.release()

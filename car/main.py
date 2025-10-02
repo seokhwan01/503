@@ -11,7 +11,8 @@ from avoidance.tts_handler import announce_evasion   # ✅ 올바른 import
 # ✅ 경로 파일 먼저 갱신
 
 subprocess.run(["python", "save_route_points.py"])
-lcd = LcdDisplay(vehicle_name="CAR 2")
+
+lcd = LcdDisplay(vehicle_name="22ga 2222",vehicle_ip="192.168.137.123")
 
 MQTT_BROKER = Config.MQTT_BROKER
 MQTT_PORT = Config.MQTT_PORT
@@ -115,5 +116,6 @@ client.connect(MQTT_BROKER, MQTT_PORT, 60)
 
 car = Car(client, car_coords)
 car.start()
+lcd.start()
 
 client.loop_forever()

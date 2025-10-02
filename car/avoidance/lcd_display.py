@@ -5,7 +5,7 @@ import threading
 import os
 
 class LcdDisplay:
-    def __init__(self, i2c_addr=0x27, lcd_width=20, vehicle_name="22가 2222"):
+    def __init__(self, i2c_addr=0x27, lcd_width=20, vehicle_name="22ga 2222", vehicle_ip=None):
         self.I2C_ADDR = i2c_addr
         self.LCD_WIDTH = lcd_width
         self.VEHICLE_NAME = vehicle_name
@@ -22,7 +22,9 @@ class LcdDisplay:
         self._lock = threading.Lock()
         self._latest_eta_minutes = None
 
-    def _get_local_ip(self):
+    def _get_local_ip(self, static_ip=None):
+        if static_ip: 
+            return static_ip
         try:
             return os.popen("hostname -I").read().strip().split()[0]
         except Exception:
@@ -58,7 +60,7 @@ class LcdDisplay:
         for char in message[:self.LCD_WIDTH]:
             self._write(ord(char), self.LCD_CHR)
 
-    def update_eta(self, minutes):
+    def update_eta(self, minutes,state):
         self._latest_eta_minutes = minutes
         eta_text = f"ETA: {minutes:02d} min" if minutes is not None else "ETA: -- min"
 
@@ -81,8 +83,12 @@ class LcdDisplay:
             self._bus = smbus2.SMBus(1)
             self._init_lcd()
             print("[LCD] ready.")
+
+            # ✅ LCD 기본 표시
+            self.update_eta(None, state="idle")   # ETA 없음, Idle 상태로 표시
         except Exception as e:
             print(f"[LCD] init failed: {e}")
+
 
     def stop(self):
         try:
