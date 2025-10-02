@@ -102,11 +102,11 @@ class AmbulanceStatus:
             dist_m = haversine(my_pos["lat"], my_pos["lng"], current["lat"], current["lng"])
 
             # ✅ 교차 여부 추적
-            if dist_m < 30:  # 30m 이내로 붙은 적 있으면 교차 플래그 ON
+            if dist_m < 100:  # 30m 이내로 붙은 적 있으면 교차 플래그 ON
                 self.crossed = True
 
-            if self.crossed and dist_m > 30:  # 다시 멀어짐 → 지나간 것으로 확정
-                print("🚑 구급차가 이미 지나감 → idle 처리")
+            if self.crossed and dist_m > 100:  # 다시 멀어짐 → 지나간 것으로 확정
+                print("-------------🚑 구급차가 이미 지나감 → idle 처리-------------")
                 return None, None, False, False
 
             # (6) 최종 판정: 경로 위 + 같은 방향일 때 True
