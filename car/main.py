@@ -44,7 +44,7 @@ def send_to_hud(client, eta_sec, total_lanes, current_lane, avoid_dir, ambulance
     # ETA 있을 때만 추가
     if eta_sec is not None:
         eta_min, eta_s = divmod(int(eta_sec), 60)
-        payload["eta"] = f"{eta_min}분 {eta_s}초"
+        payload["eta"] = f"{eta_min}m {eta_s}s"
 
     client.publish("car/hud", json.dumps(payload, ensure_ascii=False))
     print(f"📤 HUD에 전송 → {payload}")
