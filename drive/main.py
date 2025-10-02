@@ -17,7 +17,7 @@ with open(CONFIG_PATH, "r") as f:
 
 MQTT_BROKER = config.get("MQTT_BROKER", "localhost")
 MQTT_PORT   = config.get("MQTT_PORT", 1883)
-MQTT_TOPIC  = config.get("MQTT_TOPIC", "car/current_lane")
+MQTT_TOPIC  = config.get("MQTT_TOPIC", "car2/current_lane")
 
 # --- MQTT 클라이언트 초기화 ---
 mqtt_client = mqtt.Client()

@@ -1,4 +1,5 @@
 import json
+import time
 import paho.mqtt.client as mqtt
 from vehicle import Car
 from ambulance_status import AmbulanceStatus
@@ -51,13 +52,16 @@ def on_connect(client, userdata, flags, rc):
     if rc == 0:
         print("✅ MQTT 연결 성공")
         client.subscribe("ambulance/vehicles")
-        client.subscribe("car/current_lane")     # 현재 차선
+        client.subscribe("car2/current_lane")     # 현재 차선
         
     else:
         print("❌ 연결 실패:", rc)
 
 def on_message(client, userdata, msg):
-    # payload = json.loads(msg.payload.decode())
+    
+    raw_payload = msg.payload.decode()
+    global last_calc_time
+    now = time.time()
     raw_payload = msg.payload.decode()
 
     # 🚑 구급차 위치 메시지
@@ -69,36 +73,39 @@ def on_message(client, userdata, msg):
             print(f"[WARN] ambulance/vehicles 처리 실패 → {e}")
 
 
-        if car.index < len(car.coords):
-            my_pos = car.coords[car.index]
-            my_next = car.coords[car.index+1] if car.index+1 < len(car.coords) else None
-            eta, dist, same_road_and_dir, is_nearby = ambu.calculate_status(my_pos, my_next)
-            print(f"on_message | eta : {eta}, same_road_and_dir : {same_road_and_dir}")
-            car.send_feedback(my_pos, same_road_and_dir)
+        # ✅ 2초마다 계산하도록 제한
+        if now - last_calc_time >= 2.0:
+            last_calc_time = now
+            if car.index < len(car.coords):
+                my_pos = car.coords[car.index]
+                my_next = car.coords[car.index+1] if car.index+1 < len(car.coords) else None
+                eta, dist, same_road_and_dir, is_nearby = ambu.calculate_status(my_pos, my_next)
+                print(f"on_message | eta : {eta}, same_road_and_dir : {same_road_and_dir}")
+                car.send_feedback(my_pos, same_road_and_dir)
 
-            # 현재 차선은 car 객체에 저장된 값 사용
-            current_lane = car.car_lane
-            total_lanes = car.total_lanes
-            avoid_dir, ambulance_lane = decide_avoid_dir(current_lane, total_lanes)
+                # 현재 차선은 car 객체에 저장된 값 사용
+                current_lane = car.car_lane
+                total_lanes = car.total_lanes
+                avoid_dir, ambulance_lane = decide_avoid_dir(current_lane, total_lanes)
 
-            if same_road_and_dir and eta:
-                # ✅ 같은 경로 & ETA 있음 → HUD/LCD/TTS 모두 실행
-                send_to_hud(client, eta, total_lanes, current_lane,
-                            avoid_dir, ambulance_lane, state="samePath")
+                if same_road_and_dir and eta:
+                    # ✅ 같은 경로 & ETA 있음 → HUD/LCD/TTS 모두 실행
+                    send_to_hud(client, eta, total_lanes, current_lane,
+                                avoid_dir, ambulance_lane, state="samePath")
 
-                lcd.update_eta(int(eta/60), state="approaching")  # ETA 있을 때
-                direction_str = DIRECTION_MAP.get(avoid_dir, "직진")
-                announce_evasion(direction_str, int(eta/60))
+                    lcd.update_eta(int(eta/60), state="approaching")  # ETA 있을 때
+                    direction_str = DIRECTION_MAP.get(avoid_dir, "직진")
+                    announce_evasion(direction_str, int(eta/60))
 
-            elif is_nearby:
-                # ✅ 같은 경로는 아니지만 가까움 → HUD에는 nearby, LCD는 초기화
-                send_to_hud(client, None, total_lanes, current_lane, None, None, state="nearby")
-                lcd.update_eta(None, state="nearby")              # 근처에만 있을 때
+                elif is_nearby:
+                    # ✅ 같은 경로는 아니지만 가까움 → HUD에는 nearby, LCD는 초기화
+                    send_to_hud(client, None, total_lanes, current_lane, None, None, state="nearby")
+                    lcd.update_eta(None, state="nearby")              # 근처에만 있을 때
 
-            else: #경로도 다르고 주변도 아님
-                send_to_hud(client, None, total_lanes, current_lane, None, None, state="idle")
-                lcd.update_eta(None, state="idle")                # 아무것도 없을 때
-                
+                else: #경로도 다르고 주변도 아님
+                    send_to_hud(client, None, total_lanes, current_lane, None, None, state="idle")
+                    lcd.update_eta(None, state="idle")                # 아무것도 없을 때
+                    
     # 🚗 내 차량 차선 업데이트 메시지
     elif msg.topic == "car2/current_lane":
         try:

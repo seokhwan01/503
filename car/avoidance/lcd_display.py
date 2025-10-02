@@ -9,7 +9,7 @@ class LcdDisplay:
         self.I2C_ADDR = i2c_addr
         self.LCD_WIDTH = lcd_width
         self.VEHICLE_NAME = vehicle_name
-        self.VEHICLE_IP = self._get_local_ip()
+        self.VEHICLE_IP = self._get_local_ip(vehicle_ip)
         # LCD 상수
         self.LCD_CHR = 1
         self.LCD_CMD = 0
