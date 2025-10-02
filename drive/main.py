@@ -194,7 +194,7 @@ def processing_loop():
                         print(f"✅ 차선 변경 확정 → {candidate_lane}")
                         last_lane = candidate_lane
 
-            time.sleep(0.05)
+            # time.sleep(0.05)
     finally:  # <-- 반드시 finally로 자원 정리
         motor.stop()
         # cap.release()
