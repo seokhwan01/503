@@ -96,16 +96,20 @@ def _speak_thread(text: str):
 def announce_evasion(direction: str, minutes: int):
     print(f"tts분 : {minutes}")
     """긴급 회피 안내 방송을 시작합니다."""
-    if minutes==0 and direction=="직진":
-        text = f"긴급 차량이 곧 도착합니다. 서행하세요"
+    if minutes==0:
+        if direction=="직진":  
+            text = f"긴급 차량이 곧 도착합니다. 서행하세요"
 
-    if minutes==0 and direction !="직진":
-        text = f"긴급 차량이 곧 도착합니다. {direction}으로 비켜 주세요."
+        else:
+            text = f"긴급 차량이 곧 도착합니다. {direction}으로 비켜 주세요."
 
-    if direction=="직진":
-        text = f"긴급 차량이 {minutes}분 후 도착합니다. 서행하세요"
     else:
-        text = f"긴급 차량이 {minutes}분 후 도착합니다. {direction}으로 비켜 주세요."
+        if direction=="직진":
+            text = f"긴급 차량이 {minutes}분 후 도착합니다. 서행하세요"
+
+        else:
+            text = f"긴급 차량이 {minutes}분 후 도착합니다. {direction}으로 비켜 주세요."
+    
     # [수정됨] 괄호가 닫히지 않은 문법 오류 수정 및 스레드 시작
     thread = threading.Thread(target=_speak_thread, args=(text,), daemon=True)
     thread.start()
