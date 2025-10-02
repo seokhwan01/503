@@ -11,6 +11,9 @@ from car_modules.lane_detector import LaneDetector
 
 from shared_state import shared_data, lock
 
+import logging
+logging.getLogger("werkzeug").setLevel(logging.ERROR)
+
 CONFIG_PATH = os.path.join(os.path.dirname(__file__), "config.json")
 with open(CONFIG_PATH, "r") as f:
     config = json.load(f)
@@ -191,7 +194,7 @@ def processing_loop():
 if __name__ == "__main__":
     try:
         threading.Thread(target=processing_loop, daemon=True).start()
-        socketio.run(app, host="0.0.0.0", port=5000, debug=True, use_reloader=False)
+        socketio.run(app, host="0.0.0.0", port=5000, debug=False, use_reloader=False)
 
     finally:
         shared_data["running"] = False
