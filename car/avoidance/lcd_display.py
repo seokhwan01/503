@@ -54,12 +54,24 @@ class LcdDisplay:
         self._write(0x01, self.LCD_CMD)
         time.sleep(0.005)
 
-    def print_line(self, line, message):
-        message = message.ljust(self.LCD_WIDTH, " ")
-        self._write(self.LINE_ADDR[line], self.LCD_CMD)
-        for char in message[:self.LCD_WIDTH]:
-            self._write(ord(char), self.LCD_CHR)
+    def update_eta(self, minutes, state):
+            self._latest_eta_minutes = minutes
+            eta_text = f"ETA: {minutes:02d} min" if minutes is not None else "ETA: -- min"
 
+            self.print_line(0, f"{self.VEHICLE_NAME}")
+            self.print_line(1, f"IP: {self.VEHICLE_IP}")
+            self.print_line(2, eta_text)
+
+            # 상태 표시
+            if state == "approaching" and minutes is not None:
+                self.print_line(3, "Approaching".ljust(self.LCD_WIDTH))
+            elif state == "nearby":
+                self.print_line(3, "Nearby".ljust(self.LCD_WIDTH))
+            elif state == "idle":
+                self.print_line(3, "Idle".ljust(self.LCD_WIDTH))
+            else:
+                self.print_line(3, "ERROR".ljust(self.LCD_WIDTH))
+                
     def update_eta(self, minutes,state):
         self._latest_eta_minutes = minutes
         eta_text = f"ETA: {minutes:02d} min" if minutes is not None else "ETA: -- min"
