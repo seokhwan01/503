@@ -94,9 +94,11 @@ def _speak_thread(text: str):
         _tts_lock.release()
 
 def announce_evasion(direction: str, minutes: int):
+    print(f"tts분 : {minutes}")
     """긴급 회피 안내 방송을 시작합니다."""
     if minutes==0 and direction=="직진":
         text = f"긴급 차량이 곧 도착합니다. 서행하세요"
+
     if minutes==0 and direction !="직진":
         text = f"긴급 차량이 곧 도착합니다. {direction}으로 비켜 주세요."
 
