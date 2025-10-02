@@ -26,6 +26,7 @@ DIRECTION_MAP = {
     1: "오른쪽",
     2: "왼쪽"
 }
+last_calc_time = 0.0   # 처음엔 0초라고 가정
 
 car_coords = load_my_coords()
 ambu = AmbulanceStatus()
