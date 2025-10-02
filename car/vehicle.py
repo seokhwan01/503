@@ -3,7 +3,7 @@ import time
 import threading
 
 class Car:
-    def __init__(self, client, coords, car_id="22가 2222", total_lanes=3 ,car_lane=2): 
+    def __init__(self, client, coords, car_id="22ga 2222", total_lanes=3 ,car_lane=2): 
         self.client = client
         self.coords = coords
         self.car_id = car_id
@@ -39,7 +39,7 @@ class Car:
             print(f"\n🚗 내 차량 위치 업데이트: {pos}")
             self.send_position(pos)
             self.index += 1
-            time.sleep(2.0)  # 10초마다 이동
+            time.sleep(2.5)  # 10초마다 이동
 
     def start(self):
         t = threading.Thread(target=self.drive_loop, daemon=True)
