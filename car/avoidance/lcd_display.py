@@ -29,6 +29,15 @@ class LcdDisplay:
             return os.popen("hostname -I").read().strip().split()[0]
         except Exception:
             return "0.0.0.0"
+    def print_line(self, line: int, message: str):
+        """LCD 특정 라인에 메시지를 출력합니다."""
+        # 메시지를 LCD 한 줄 크기에 맞게 패딩
+        message = message.ljust(self.LCD_WIDTH, " ")
+        # 커서 이동
+        self._write(self.LINE_ADDR[line], self.LCD_CMD)
+        # 문자 하나씩 출력
+        for char in message[:self.LCD_WIDTH]:
+            self._write(ord(char), self.LCD_CHR)
 
     def _write(self, bits, mode):
         high = mode | (bits & 0xF0) | self.BACKLIGHT
@@ -71,24 +80,7 @@ class LcdDisplay:
                 self.print_line(3, "Idle".ljust(self.LCD_WIDTH))
             else:
                 self.print_line(3, "ERROR".ljust(self.LCD_WIDTH))
-                
-    def update_eta(self, minutes,state):
-        self._latest_eta_minutes = minutes
-        eta_text = f"ETA: {minutes:02d} min" if minutes is not None else "ETA: -- min"
-
-        self.print_line(0, f"{self.VEHICLE_NAME}")
-        self.print_line(1, f"IP: {self.VEHICLE_IP}")
-        self.print_line(2, eta_text)
-
-        # 상태 표시
-        if state == "approaching" and minutes is not None:
-            self.print_line(3, "Approaching")
-        elif state == "nearby":
-            self.print_line(3, "Nearby")
-        elif state == "idle":
-            self.print_line(3, "Idle")
-        else:
-            self.print_line(3, "")
+   
 
     def start(self):
         try:
