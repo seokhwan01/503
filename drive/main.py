@@ -180,11 +180,20 @@ def processing_loop():
                         candidate_lane = current_lane
                         candidate_count = 1
 
-                    # 후보가 3번 연속 나오면 확정 발송
+                    # 조건 A: 후보 3회 연속 + 값이 바뀜
                     if candidate_count >= STABLE_THRESHOLD and candidate_lane != last_lane:
                         mqtt_client.publish("car2/current_lane", int(candidate_lane), qos=2)
                         print(f"✅ 차선 변경 확정 → {candidate_lane}")
                         last_lane = candidate_lane
+                        last_publish_time = time.time()
+                    # 조건 B: 값이 유지돼도 주기적 재송신
+                    elif candidate_lane == last_lane:
+                        now = time.time()
+                        if now - last_publish_time >= PUBLISH_INTERVAL:
+                            mqtt_client.publish("car2/current_lane", int(last_lane), qos=2)
+                            print(f"🔄 주기적 재송신 → {last_lane}")
+                            last_publish_time = now
+
 
     finally:  # <-- 반드시 finally로 자원 정리
         motor.stop()
