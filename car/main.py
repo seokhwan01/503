@@ -129,3 +129,4 @@ car.start()
 lcd.start()
 
 client.loop_forever()
+print("캐시 없ㅇ므 확인용")
