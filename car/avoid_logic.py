@@ -8,7 +8,7 @@ def decide_avoid_dir(current_lane: int, total_lanes: int = 3) -> tuple[int, int]
         elif current_lane == 2:
             avoid_dir = 1   # 오른쪽
         elif current_lane == 3:
-            avoid_dir = 2   # 왼쪽
+            avoid_dir = 0   # 직진
         else:
             avoid_dir = -1  # 판단 불가
 
