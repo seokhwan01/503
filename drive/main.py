@@ -181,7 +181,7 @@ def processing_loop():
 
                     # 후보가 3번 연속 나오면 확정 발송
                     if candidate_count >= STABLE_THRESHOLD and candidate_lane != last_lane:
-                        mqtt_client.publish("car2/current_lane", int(candidate_lane))
+                        mqtt_client.publish("car2/current_lane", int(candidate_lane), qos=2)
                         print(f"✅ 차선 변경 확정 → {candidate_lane}")
                         last_lane = candidate_lane
 

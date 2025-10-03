@@ -64,7 +64,9 @@ class AmbulanceStatus:
                               key=lambda idx: haversine(my_pos["lat"], my_pos["lng"],
                                                         route_points[idx]["lat"], route_points[idx]["lng"]))
             min_d = haversine(my_pos["lat"], my_pos["lng"], route_points[nearest_idx]["lat"], route_points[nearest_idx]["lng"])
-            on_route = min_d <= 30
+            # on_route = min_d <= 30
+
+            on_route = (min_d <= 100)
             same_lane = None
             # print(f"📏 내 차량-구급차 경로
             #  거리: {min_d:.2f} m")
