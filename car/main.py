@@ -92,12 +92,8 @@ def on_message(client, userdata, msg):
                 avoid_dir, ambulance_lane = decide_avoid_dir(current_lane, total_lanes)
 
                 if same_road_and_dir and eta:
-                    eta_sec = int(eta)   # eta는 초 단위 정수
-                    minutes = eta_sec // 60
-                    seconds = eta_sec % 60
-                    hud_eta = f"{minutes}m {seconds}s"
                     # ✅ 같은 경로 & ETA 있음 → HUD/LCD/TTS 모두 실행
-                    send_to_hud(client, hud_eta , total_lanes, current_lane,
+                    send_to_hud(client, eta , total_lanes, current_lane,
                                 avoid_dir, ambulance_lane, state="samePath")
 
                     lcd.update_eta(int(eta/60), state="approaching")  # ETA 있을 때
