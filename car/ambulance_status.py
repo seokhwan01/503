@@ -81,6 +81,7 @@ class AmbulanceStatus:
 
                 # 방향이 비슷하면 same_lane=True, 반대면 False
                 raw_same_lane = None
+                print(f"raw_same_lane : {raw_same_lane}")
 
                 if cos_theta > 0.2:
                     raw_same_lane = True
