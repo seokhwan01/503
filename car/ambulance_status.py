@@ -36,96 +36,89 @@ class AmbulanceStatus:
             # 네비 API 응답: routes → sections → roads
             roads = route_info["routes"][0]["sections"][0]["roads"]
 
-            # (1) 내 위치와 구급차 위치를 각 도로 vertex와 비교 → 가장 가까운 도로 index 탐색
-            my_idx = min(range(len(roads)),
-                         key=lambda i: haversine(my_pos["lat"], my_pos["lng"],
-                                                 roads[i]["vertexes"][1], roads[i]["vertexes"][0]))
-            ambu_idx = min(range(len(roads)),
-                           key=lambda j: haversine(current["lat"], current["lng"],
-                                                   roads[j]["vertexes"][1], roads[j]["vertexes"][0]))
-     
-
-            # (2) ETA 계산: 두 차량 위치 사이의 도로 duration 합산
-            if my_idx <= ambu_idx:
-                eta = sum(r["duration"] for r in roads[my_idx:ambu_idx+1])
-            else:
-                eta = sum(r["duration"] for r in roads[ambu_idx:my_idx+1])
-
-            # (3) 경로 위/on_route 여부 확인
+            # (1) 경로 전체 vertex 평탄화
             route_points = []
+            durations = []   # 각 segment duration 저장 (roads 단위 → vertex로 분배)
             for road in roads:
                 verts = road["vertexes"]
+                # vertexes = [x1, y1, x2, y2, ...]
                 for k in range(0, len(verts), 2):
                     lng, lat = verts[k], verts[k+1]
                     route_points.append({"lat": lat, "lng": lng})
-            
-            # 내 위치에서 가장 가까운 경로 좌표 찾기
-            nearest_idx = min(range(len(route_points)),
-                              key=lambda idx: haversine(my_pos["lat"], my_pos["lng"],
-                                                        route_points[idx]["lat"], route_points[idx]["lng"]))
-            min_d = haversine(my_pos["lat"], my_pos["lng"], route_points[nearest_idx]["lat"], route_points[nearest_idx]["lng"])
-            # on_route = min_d <= 30
+                # 각 road duration을 vertex 구간 수만큼 균등 분할
+                segs = max(1, (len(verts)//2 - 1))
+                for _ in range(segs):
+                    durations.append(road["duration"] / segs)
 
+            # (2) 내 위치 / 구급차 위치를 route_points에 매핑
+            my_idx = min(range(len(route_points)),
+                        key=lambda i: haversine(my_pos["lat"], my_pos["lng"],
+                                                route_points[i]["lat"], route_points[i]["lng"]))
+            ambu_idx = min(range(len(route_points)),
+                        key=lambda j: haversine(current["lat"], current["lng"],
+                                                route_points[j]["lat"], route_points[j]["lng"]))
+            
+            # (3) ETA 계산 (두 index 사이 duration 합)
+            if my_idx <= ambu_idx:
+                eta = sum(durations[my_idx:ambu_idx+1])
+            else:
+                eta = sum(durations[ambu_idx:my_idx+1])
+
+            # (4) on_route 판정
+            nearest_idx = my_idx
+            min_d = haversine(my_pos["lat"], my_pos["lng"],
+                            route_points[nearest_idx]["lat"], route_points[nearest_idx]["lng"])
             on_route = (min_d <= 100)
             same_lane = None
             print(f"📏 내 차량-구급차 경로 거리: {min_d:.2f} m")
 
-
-            # (4) 진행 방향 동일 여부 계산 (코사인 유사도 이용)
+            # (5) 진행 방향 동일 여부 (코사인 유사도)
             if on_route and 0 < nearest_idx < len(route_points)-1:
                 prev_p, next_p = route_points[nearest_idx-1], route_points[nearest_idx+1]
                 v_route = (next_p["lng"] - prev_p["lng"], next_p["lat"] - prev_p["lat"])
                 v_car = (my_next["lng"] - my_pos["lng"], my_next["lat"] - my_pos["lat"]) if my_next else (0, 0)
-                cos_theta = cosine_similarity(v_car, v_route) # 내 차량 이동 벡터
+                cos_theta = cosine_similarity(v_car, v_route)
 
-                # 방향이 비슷하면 same_lane=True, 반대면 False
                 raw_same_lane = None
-                print(f"raw_same_lane : {raw_same_lane}")
-
                 if cos_theta > 0.2:
                     raw_same_lane = True
                 elif cos_theta < -0.2:
                     raw_same_lane = False
 
-                # ✅ 안정화 처리 (3번 연속 같아야 확정)
                 if raw_same_lane is not None:
                     if raw_same_lane == self.last_same_lane:
                         self.same_lane_count += 1
                     else:
                         self.same_lane_count = 1
                         self.last_same_lane = raw_same_lane
-
                     if self.same_lane_count >= 3:
                         self.stable_same_lane = raw_same_lane
 
                 same_lane = self.stable_same_lane
 
-            # (5) 내 차와 구급차의 직선 거리 (m)
+            # (6) 직선 거리
             dist_m = haversine(my_pos["lat"], my_pos["lng"], current["lat"], current["lng"])
 
             # ✅ 교차 여부 추적
-            if dist_m < 100:  # 30m 이내로 붙은 적 있으면 교차 플래그 ON
+            if dist_m < 100:
                 self.crossed = True
-
-            if self.crossed and dist_m > 100:  # 다시 멀어짐 → 지나간 것으로 확정
+            if self.crossed and dist_m > 100:
                 print("-------------🚑 구급차가 이미 지나감 → idle 처리-------------")
                 return None, None, False, False
 
-            # (6) 최종 판정: 경로 위 + 같은 방향일 때 True
+            # (7) 최종 판정
             is_same_road_and_dir = False
-            is_nearby = False   # 기본값
+            is_nearby = False
 
             if on_route and same_lane is True:
                 print("같은 경로")
                 is_same_road_and_dir = True
-            
-            elif dist_m <= 500:   # 500m 이내면 '주변'
+            elif dist_m <= 500:
                 print("⚠️ 다른 경로지만 가까움")
                 is_nearby = True
-                print(f"eta : {eta}, dist : {dist_m}, same_road : {is_same_road_and_dir}")
 
             return eta, dist_m, is_same_road_and_dir, is_nearby
-            
+
         except Exception as e:
             print("⚠️ 상태 계산 실패:", e)
             return None, None, None, None
