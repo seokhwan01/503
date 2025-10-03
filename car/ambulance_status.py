@@ -34,7 +34,9 @@ class AmbulanceStatus:
                 return None, None, None, None
             
             # 네비 API 응답: routes → sections → roads
-            roads = route_info["routes"][0]["sections"][0]["roads"]
+            roads = []
+            for sec in route_info["routes"][0]["sections"]:
+                roads.extend(sec["roads"])
 
             # (1) 내 위치와 구급차 위치를 각 도로 vertex와 비교 → 가장 가까운 도로 index 탐색
             my_idx = min(range(len(roads)),
