@@ -47,6 +47,7 @@ last_lane = None        # 마지막 확정된 차선
 candidate_lane = None   # 후보 차선
 candidate_count = 0     # 후보 차선이 연속으로 들어온 횟수
 STABLE_THRESHOLD = 3    # 몇 번 연속 들어와야 확정할지
+PUBLISH_INTERVAL = 1.0  # 초 단위 (예: 1초마다 최소 1번 발행)
 
 
 motor = MotorController(MOTOR_PINS)
